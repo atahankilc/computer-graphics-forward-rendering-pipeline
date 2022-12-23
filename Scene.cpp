@@ -80,6 +80,7 @@ bool Scene::clipLine(Vec4 &v0, Vec4 &v1) {
 
 void Scene::wireRasterization(Vec4 v0, Vec4 v1) {
     if (this->clipLine(v0, v1)) {
+        int increment;
         double m = (v1.y - v0.y) / (v1.x - v0.x);
         if (m > 1 || m < -1) {
             double dummy0 = v0.x, dummy1 = v1.x;
@@ -89,15 +90,27 @@ void Scene::wireRasterization(Vec4 v0, Vec4 v1) {
             v1.y = dummy1;
         }
         if (v1.x < v0.x) {
-            swap(v0, v1);
+            double dummyX = v0.x, dummyY = v0.y, dummyZ = v0.z, dummyT = v0.t;
+            auto dummyColor = Color(v0.color);
+            v0.x = v1.x;
+            v0.y = v1.y;
+            v0.z = v1.z;
+            v0.t = v1.t;
+            v0.color = Color(v1.color);
+            v1.x = dummyX;
+            v1.y = dummyY;
+            v1.z = dummyZ;
+            v1.t = dummyT;
+            v1.color = Color(dummyColor);
         }
-        int increment = 1;
-        if (v1.y < v0.y) {
+        if (v1.y > v0.y) {
+            increment = 1;
+        } else {
             increment = -1;
         }
         double diffX = v1.x - v0.x, diffY = v0.y - v1.y;
         int y = (int) v0.y;
-        int d = (int) (diffY + (increment * 0.5 * diffX));
+        int d = (int) (diffY + increment * 0.5 * diffX);
         Color c = Color(v0.color.r,
                         v0.color.g,
                         v0.color.b);
@@ -109,7 +122,7 @@ void Scene::wireRasterization(Vec4 v0, Vec4 v1) {
                                           int(c.b + 0.5));
                 if (d * increment < 0) {
                     y += increment;
-                    d += (int) (diffY + (increment * diffX));
+                    d += (int) (diffY + increment * diffX);
                 } else
                     d += (int) diffY;
                 c = Color(c.r + dc.r,
@@ -123,7 +136,7 @@ void Scene::wireRasterization(Vec4 v0, Vec4 v1) {
                                           int(c.b + 0.5));
                 if (d * increment < 0) {
                     y += increment;
-                    d += (int) (diffY + (increment * diffX));
+                    d += (int) (diffY + increment * diffX);
                 } else
                     d += (int) diffY;
                 c = Color(c.r + dc.r,
